@@ -95,7 +95,7 @@ elif [ "$release" == "ubuntu" ]; then
     fi
     if  [ -n "$(grep ' 12\.' /etc/os-release)" ] ;then
     red "==============="
-    red "当前系统不受支持"
+    red "please use centos7"
     red "==============="
     exit
     fi
@@ -106,7 +106,7 @@ fi
 $systemPackage -y install  nginx wget unzip zip curl tar >/dev/null 2>&1
 systemctl enable nginx.service
 green "======================="
-blue "请输入绑定到本VPS的域名"
+blue "please enter your domain"
 green "======================="
 read your_domain
 real_addr=`ping ${your_domain} -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
@@ -282,7 +282,7 @@ EOF
 	green "======================================================================"
 	else
         red "================================"
-	red "https证书没有申请成果，本次安装失败"
+	red "your certificate application was unsuccessful"
 	red "================================"
 	fi
 	
@@ -339,7 +339,7 @@ start_menu(){
     ;;
     *)
     clear
-    red "请输入正确数字"
+    red "please enter the correct number"
     sleep 1s
     start_menu
     ;;
