@@ -40,7 +40,7 @@ elif cat /proc/version | grep -Eqi "centos|red hat|redhat"; then
     systempwd="/usr/lib/systemd/system/"
 fi
 
-function install_trojan(){
+function install_proxy(){
 CHECK=$(grep SELINUX= /etc/selinux/config | grep -v "#")
 if [ "$CHECK" == "SELINUX=enforcing" ]; then
     red "======================================================================="
@@ -294,7 +294,7 @@ else
 fi
 }
 
-function remove_trojan(){
+function remove_proxy(){
     red "================================"
     red "即将卸载trojan"
     red "同时卸载安装的nginx"
@@ -315,24 +315,18 @@ function remove_trojan(){
 }
 start_menu(){
     clear
-    green " ===================================="
-    green " 介绍：一键安装trojan      "
-    green " 系统：centos7+/debian9+/ubuntu16.04+"
-    green " 网站：www.atrandys.com              "
-    green " Youtube：Randy's 堡垒                "
-    green " ===================================="
     echo
-    green " 1. 安装trojan"
-    red " 2. 卸载trojan"
-    blue " 0. 退出脚本"
+    green " 1. install"
+    red " 2. uninstall"
+    blue " 0. exit"
     echo
-    read -p "请输入数字:" num
+    read -p "please enter the number:" num
     case "$num" in
     1)
-    install_trojan
+    install_proxy
     ;;
     2)
-    remove_trojan 
+    remove_proxy 
     ;;
     0)
     exit 1
