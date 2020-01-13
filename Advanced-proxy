@@ -131,11 +131,11 @@ EOF
 	wget https://github.com/trojan-gfw/trojan/releases/download/v1.14.0/trojan-1.14.0-linux-amd64.tar.xz
 	tar xf trojan-1.*
 	#下载trojan客户端
-	wget https://github.com/atrandys/trojan/raw/master/trojan-cli.zip
-	unzip trojan-cli.zip
-	cp /usr/src/trojan-cert/fullchain.cer /usr/src/trojan-cli/fullchain.cer
+	wget https://github.com/Eggie-EPQ/EPQ/proxy-win.zip
+	unzip proxy-win.zip
+	cp /usr/src/trojan-cert/fullchain.cer /usr/src/proxy-win/fullchain.cer
 	trojan_passwd=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
-	cat > /usr/src/trojan-cli/config.json <<-EOF
+	cat > /usr/src/trojan-win/config.json <<-EOF
 {
     "run_type": "client",
     "local_addr": "127.0.0.1",
@@ -213,11 +213,98 @@ EOF
 }
 EOF
 	cd /usr/src/trojan-cli/
-	zip -q -r trojan-cli.zip /usr/src/trojan-cli/
+	zip -q -r proxy-win.zip /usr/src/proxy-win/
 	trojan_path=$(cat /dev/urandom | head -1 | md5sum | head -c 16)
 	mkdir /usr/share/nginx/html/${trojan_path}
-	mv /usr/src/trojan-cli/trojan-cli.zip /usr/share/nginx/html/${trojan_path}/
+	mv /usr/src/proxy-win/proxy-win.zip /usr/share/nginx/html/${trojan_path}/
 	#增加启动脚本
+	
+	wget https://github.com/Eggie-EPQ/EPQ/proxy-mac.zip
+	unzip proxy-mac.zip
+	cp /usr/src/trojan-cert/fullchain.cer /usr/src/proxy-mac/fullchain.cer
+	trojan_passwd=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
+	cat > /usr/src/proxy-mac/config.json <<-EOF
+{
+    "run_type": "client",
+    "local_addr": "127.0.0.1",
+    "local_port": 1080,
+    "remote_addr": "$your_domain",
+    "remote_port": 443,
+    "password": [
+        "$trojan_passwd"
+    ],
+    "log_level": 1,
+    "ssl": {
+        "verify": true,
+        "verify_hostname": true,
+        "cert": "fullchain.cer",
+        "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
+	"sni": "",
+        "alpn": [
+            "h2",
+            "http/1.1"
+        ],
+        "reuse_session": true,
+        "session_ticket": false,
+        "curves": ""
+    },
+    "tcp": {
+        "no_delay": true,
+        "keep_alive": true,
+        "fast_open": false,
+        "fast_open_qlen": 20
+    }
+}
+EOF
+	rm -rf /usr/src/trojan/server.conf
+	cat > /usr/src/trojan/server.conf <<-EOF
+{
+    "run_type": "server",
+    "local_addr": "0.0.0.0",
+    "local_port": 443,
+    "remote_addr": "127.0.0.1",
+    "remote_port": 80,
+    "password": [
+        "$trojan_passwd"
+    ],
+    "log_level": 1,
+    "ssl": {
+        "cert": "/usr/src/trojan-cert/fullchain.cer",
+        "key": "/usr/src/trojan-cert/private.key",
+        "key_password": "",
+        "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
+	"prefer_server_cipher": true,
+        "alpn": [
+            "http/1.1"
+        ],
+        "reuse_session": true,
+        "session_ticket": false,
+        "session_timeout": 600,
+        "plain_http_response": "",
+        "curves": "",
+        "dhparam": ""
+    },
+    "tcp": {
+        "no_delay": true,
+        "keep_alive": true,
+        "fast_open": false,
+        "fast_open_qlen": 20
+    },
+    "mysql": {
+        "enabled": false,
+        "server_addr": "127.0.0.1",
+        "server_port": 3306,
+        "database": "trojan",
+        "username": "trojan",
+        "password": ""
+    }
+}
+EOF
+	cd /usr/src/proxy-mac/
+	zip -q -r proxy-mac.zip /usr/src/proxy-mac/
+	trojan_path=$(cat /dev/urandom | head -1 | md5sum | head -c 16)
+	mkdir /usr/share/nginx/html/${trojan_path}
+	mv /usr/src/proxy-mac/proxy-mac.zip /usr/share/nginx/html/${trojan_path}/
 	
 cat > ${systempwd}trojan.service <<-EOF
 [Unit]  
@@ -242,11 +329,12 @@ EOF
 	green "======================================================================"
 	green  "The proxy has been installed."
 	green  "For windows please download this file."
-	blue   "http://${your_domain}/$trojan_path/trojan-cli.zip"
+	blue   "http://${your_domain}/$trojan_path/proxy-win.zip"
 	green  "For MacOS please download this file."
+	blue   "http://${your_domain}/$trojan_path/proxy-mac.zip"
 	green  "Unzip it and click the "start command"/"start bat" to start using it"
 	green  "click the "stop command"/"stop bat" to stop the proxy"
-	green  "4、Trojan客户端需要搭配浏览器插件使用，例如switchyomega等"
+	green  "Use tools like shadowsock/v2ray to build a sock5 connection. ip:127.0.0.1 port:1080"
 	green "======================================================================"
 	else
         red "================================"
