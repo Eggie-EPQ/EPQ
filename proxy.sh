@@ -135,7 +135,7 @@ EOF
 	unzip proxy-win.zip
 	cp /usr/src/trojan-cert/fullchain.cer /usr/src/proxy-win/fullchain.cer
 	trojan_passwd=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
-	cat > /usr/src/trojan-win/config.json <<-EOF
+	cat > /usr/src/proxy-win/config.json <<-EOF
 {
     "run_type": "client",
     "local_addr": "127.0.0.1",
