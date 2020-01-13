@@ -18,6 +18,4 @@ read -p "Installation has finished.Restart？[Y/n]:" yn
 if [[ $yn == [Yy] ]]; then
       echo -e "restarting"
 		  reboot
-	echo -e "restarting"
-	reboot
 fi
