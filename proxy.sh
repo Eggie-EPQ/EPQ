@@ -39,7 +39,8 @@ elif cat /proc/version | grep -Eqi "centos|red hat|redhat"; then
     systemPackage="yum"
     systempwd="/usr/lib/systemd/system/"
 fi
-$systemPackage -y install  nginx wget unzip zip curl tar >/dev/null 2>&1
+
+
 function install_proxy(){
 Port80=`netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 80`
 Port443=`netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 443`
@@ -87,7 +88,41 @@ if [ "$CHECK" == "SELINUX=permissive" ]; then
     exit
 fi
 
+if [ "$release" == "centos" ]; then
+    if  [ -n "$(grep ' 6\.' /etc/redhat-release)" ] ;then
+    red "==============="
+    red "当前系统不受支持"
+    red "==============="
+    exit
+    fi
+    if  [ -n "$(grep ' 5\.' /etc/redhat-release)" ] ;then
+    red "==============="
+    red "当前系统不受支持"
+    red "==============="
+    exit
+    fi
+    systemctl stop firewalld
+    systemctl disable firewalld
+    rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+elif [ "$release" == "ubuntu" ]; then
+    if  [ -n "$(grep ' 14\.' /etc/os-release)" ] ;then
+    red "==============="
+    red "当前系统不受支持"
+    red "==============="
+    exit
+    fi
+    if  [ -n "$(grep ' 12\.' /etc/os-release)" ] ;then
+    red "==============="
+    red "当前系统不受支持"
+    red "==============="
+    exit
+    fi
+    systemctl stop ufw
+    systemctl disable ufw
+    apt-get update
+fi
 
+$systemPackage -y install  nginx wget unzip zip curl tar >/dev/null 2>&1
 systemctl enable nginx.service
 green "======================="
 blue "please enter your domain"
@@ -390,8 +425,8 @@ start_menu(){
     clear
     echo
     green " 1. install"
-    red " 2. uninstall"
-    blue " 0. exit"
+    red   " 2. uninstall"
+    blue  " 0. exit"
     echo
     read -p "please enter the number:" num
     case "$num" in
