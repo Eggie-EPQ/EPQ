@@ -44,65 +44,33 @@ function install_proxy(){
 CHECK=$(grep SELINUX= /etc/selinux/config | grep -v "#")
 if [ "$CHECK" == "SELINUX=enforcing" ]; then
     red "======================================================================="
-    red "检测到SELinux为开启状态，为防止申请证书失败，请先重启VPS后，再执行本脚本"
+    red "SELinux is enabled. Please restart to disabled first."
     red "======================================================================="
-    read -p "是否现在重启 ?请输入 [Y/n] :" yn
+    read -p "restart now? [Y/n] :" yn
 	[ -z "${yn}" ] && yn="y"
 	if [[ $yn == [Yy] ]]; then
 	    sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
             setenforce 0
-	    echo -e "VPS 重启中..."
+	    echo -e "restarting..."
 	    reboot
 	fi
     exit
 fi
 if [ "$CHECK" == "SELINUX=permissive" ]; then
     red "======================================================================="
-    red "检测到SELinux为宽容状态，为防止申请证书失败，请先重启VPS后，再执行本脚本"
+    red "SELinux is enabled. Please restart to disabled first."
     red "======================================================================="
-    read -p "是否现在重启 ?请输入 [Y/n] :" yn
+    read -p "restart now? [Y/n] :" yn
 	[ -z "${yn}" ] && yn="y"
 	if [[ $yn == [Yy] ]]; then
 	    sed -i 's/SELINUX=permissive/SELINUX=disabled/g' /etc/selinux/config
             setenforce 0
-	    echo -e "VPS 重启中..."
+	    echo -e "restarting..."
 	    reboot
 	fi
     exit
 fi
-if [ "$release" == "centos" ]; then
-    if  [ -n "$(grep ' 6\.' /etc/redhat-release)" ] ;then
-    red "==============="
-    red "当前系统不受支持"
-    red "==============="
-    exit
-    fi
-    if  [ -n "$(grep ' 5\.' /etc/redhat-release)" ] ;then
-    red "==============="
-    red "当前系统不受支持"
-    red "==============="
-    exit
-    fi
-    systemctl stop firewalld
-    systemctl disable firewalld
-    rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
-elif [ "$release" == "ubuntu" ]; then
-    if  [ -n "$(grep ' 14\.' /etc/os-release)" ] ;then
-    red "==============="
-    red "当前系统不受支持"
-    red "==============="
-    exit
-    fi
-    if  [ -n "$(grep ' 12\.' /etc/os-release)" ] ;then
-    red "==============="
-    red "please use centos7"
-    red "==============="
-    exit
-    fi
-    systemctl stop ufw
-    systemctl disable ufw
-    apt-get update
-fi
+
 $systemPackage -y install  nginx wget unzip zip curl tar >/dev/null 2>&1
 systemctl enable nginx.service
 green "======================="
@@ -113,7 +81,7 @@ real_addr=`ping ${your_domain} -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
 local_addr=`curl ipv4.icanhazip.com`
 if [ $real_addr == $local_addr ] ; then
 	green "=========================================="
-	green "       域名解析正常，开始安装trojan"
+	green  "Your domain is functioning. Let's begin"
 	green "=========================================="
 	sleep 1s
 cat > /etc/nginx/nginx.conf <<-EOF
@@ -160,7 +128,6 @@ EOF
         --reloadcmd  "systemctl force-reload  nginx.service"
 	if test -s /usr/src/trojan-cert/fullchain.cer; then
         cd /usr/src
-	#wget https://github.com/trojan-gfw/trojan/releases/download/v1.13.0/trojan-1.13.0-linux-amd64.tar.xz
 	wget https://github.com/trojan-gfw/trojan/releases/download/v1.14.0/trojan-1.14.0-linux-amd64.tar.xz
 	tar xf trojan-1.*
 	#下载trojan客户端
@@ -273,12 +240,13 @@ EOF
 	systemctl start trojan.service
 	systemctl enable trojan.service
 	green "======================================================================"
-	green "Trojan已安装完成，请使用以下链接下载trojan客户端，此客户端已配置好所有参数"
-	green "1、复制下面的链接，在浏览器打开，下载客户端"
-	blue "http://${your_domain}/$trojan_path/trojan-cli.zip"
-	green "2、将下载的压缩包解压，打开文件夹，打开start.bat即打开并运行Trojan客户端"
-	green "3、打开stop.bat即关闭Trojan客户端"
-	green "4、Trojan客户端需要搭配浏览器插件使用，例如switchyomega等"
+	green  "The proxy has been installed."
+	green  "For windows please download this file."
+	blue   "http://${your_domain}/$trojan_path/trojan-cli.zip"
+	green  "For MacOS please download this file."
+	green  "Unzip it and click the "start command"/"start bat" to start using it"
+	green  "click the "stop command"/"stop bat" to stop the proxy"
+	green  "4、Trojan客户端需要搭配浏览器插件使用，例如switchyomega等"
 	green "======================================================================"
 	else
         red "================================"
@@ -288,16 +256,16 @@ EOF
 	
 else
 	red "================================"
-	red "域名解析地址与本VPS IP地址不一致"
-	red "本次安装失败，请确保域名解析正常"
+	red "Your domain resolution isn't functioning"
+	red "Installation is unsuccessful. Please fix your domain resolution and start again."
 	red "================================"
 fi
 }
 
 function remove_proxy(){
     red "================================"
-    red "即将卸载trojan"
-    red "同时卸载安装的nginx"
+    red "Uninstall proxy"
+    red "Uninstall nginx"
     red "================================"
     systemctl stop trojan
     systemctl disable trojan
@@ -310,7 +278,7 @@ function remove_proxy(){
     rm -rf /usr/src/trojan*
     rm -rf /usr/share/nginx/html/*
     green "=============="
-    green "trojan删除完毕"
+    green "Uninstall is completed"
     green "=============="
 }
 start_menu(){
