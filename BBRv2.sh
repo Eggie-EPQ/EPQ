@@ -1,7 +1,7 @@
 apt -y update
 apt -y install git
-git clone https://github.com/xiya233/bbr2.git
-cd bbr2/debian
+git clone https://github.com/Eggie-EPQ/EPQ.git
+cd BBRv2
 apt -y install *
 echo "tcp_bbr" >> /etc/modules
 echo "tcp_bbr2" >> /etc/modules
