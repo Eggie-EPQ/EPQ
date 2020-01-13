@@ -9,7 +9,7 @@ green(){
 red(){
     echo -e "\033[31m\033[01m$1\033[0m"
 }
-#copy from 秋水逸冰 ss scripts
+
 if [[ -f /etc/redhat-release ]]; then
     release="centos"
     systemPackage="yum"
@@ -41,6 +41,22 @@ elif cat /proc/version | grep -Eqi "centos|red hat|redhat"; then
 fi
 
 function install_proxy(){
+Port80=`netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 80`
+Port443=`netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 443`
+if [ -n "$Port80" ]; then
+    process80=`netstat -tlpn | awk -F '[: ]+' '$5=="80"{print $9}'`
+    red "==========================================================="
+    red "port 80 has been occupied：${process80}，installation ended"
+    red "==========================================================="
+    exit 1
+fi
+if [ -n "$Port443" ]; then
+    process443=`netstat -tlpn | awk -F '[: ]+' '$5=="443"{print $9}'`
+    red "============================================================="
+    red "port 443 has been occupied：${process443}，installation ended"
+    red "============================================================="
+    exit 1
+fi
 CHECK=$(grep SELINUX= /etc/selinux/config | grep -v "#")
 if [ "$CHECK" == "SELINUX=enforcing" ]; then
     red "======================================================================="
