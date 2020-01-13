@@ -1,5 +1,5 @@
 yum -y install git
-git clone https://github.com/
+git clone https://github.com/xiya233/bbr2.git
 cd bbr2/centos
 yum -y localinstall *
 grub2-set-default 0
