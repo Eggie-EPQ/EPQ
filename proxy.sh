@@ -39,7 +39,7 @@ elif cat /proc/version | grep -Eqi "centos|red hat|redhat"; then
     systemPackage="yum"
     systempwd="/usr/lib/systemd/system/"
 fi
-
+$systemPackage -y install  nginx wget unzip zip curl tar >/dev/null 2>&1
 function install_proxy(){
 Port80=`netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 80`
 Port443=`netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 443`
@@ -87,7 +87,7 @@ if [ "$CHECK" == "SELINUX=permissive" ]; then
     exit
 fi
 
-$systemPackage -y install  nginx wget unzip zip curl tar >/dev/null 2>&1
+
 systemctl enable nginx.service
 green "======================="
 blue "please enter your domain"
