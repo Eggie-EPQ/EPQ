@@ -10,9 +10,11 @@ sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf
 sed -i '/net.ipv4.tcp_ecn/d' /etc/sysctl.conf
 echo "net.ipv4.tcp_congestion_control = bbr2" >> /etc/sysctl.conf
 echo "net.ipv4.tcp_ecn = 1" >> /etc/sysctl.conf
+echo 1 > /sys/module/tcp_bbr2/parameters/ecn_enable
+sed -i "/\/sys\/module\/tcp_bbr2\/parameters\/ecn_enable/d" /etc/rc.local
+add_to_rc.local "echo 1 > /sys/module/tcp_bbr2/parameters/ecn_enable"
 sysctl -p
 rm -rf ~/bbr2
-echo 1 > /sys/module/tcp_bbr2/parameters/ecn_enable
 read -p "Installation has been finished.Restart？[Y/n] :" yn
 [ -z "${yn}" ] && yn="y"
 if [[ $yn == [Yy] ]]; then
