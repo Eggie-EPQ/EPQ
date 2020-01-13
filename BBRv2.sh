@@ -13,9 +13,9 @@ echo "net.ipv4.tcp_ecn = 1" >> /etc/sysctl.conf
 sysctl -p
 echo 1 > /sys/module/tcp_bbr2/parameters/ecn_enable
 rm -rf ~/bbr2
-read -p "Installation has finished.Restart？[Y/n]:" yn
+read -p "Installation has finished.Restart？[Y/n] :" yn
 [ -z "${yn}" ] && yn="y"
 if [[ $yn == [Yy] ]]; then
-      echo -e "restarting"
-		  reboot
+	echo -e "restarting"
+	reboot
 fi
