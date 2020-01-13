@@ -147,7 +147,7 @@ EOF
 	wget https://github.com/trojan-gfw/trojan/releases/download/v1.14.0/trojan-1.14.0-linux-amd64.tar.xz
 	tar xf trojan-1.*
 	#下载trojan客户端
-	wget https://github.com/Eggie-EPQ/EPQ/raw/master/proxy-win.zip
+	wget https://github.com/Eggie-EPQ/EPQ/releases/download/1.0/proxy-win.zip
 	unzip proxy-win.zip
 	cp /usr/src/trojan-cert/fullchain.cer /usr/src/proxy-win/fullchain.cer
 	trojan_passwd=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
@@ -235,7 +235,7 @@ EOF
 	mv /usr/src/proxy-win/proxy-win.zip /usr/share/nginx/html/${trojan_path}/
 	#增加启动脚本
 	
-	wget https://github.com/Eggie-EPQ/EPQ/raw/master/proxy-mac.zip
+	wget https://github.com/Eggie-EPQ/EPQ/releases/download/1.0/proxy-win.zip
 	unzip proxy-mac.zip
 	cp /usr/src/trojan-cert/fullchain.cer /usr/src/proxy-mac/fullchain.cer
 	trojan_passwd=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
