@@ -91,13 +91,13 @@ fi
 if [ "$release" == "centos" ]; then
     if  [ -n "$(grep ' 6\.' /etc/redhat-release)" ] ;then
     red "==============="
-    red "当前系统不受支持"
+    red "use centos7"
     red "==============="
     exit
     fi
     if  [ -n "$(grep ' 5\.' /etc/redhat-release)" ] ;then
     red "==============="
-    red "当前系统不受支持"
+    red "use centos7"
     red "==============="
     exit
     fi
@@ -107,13 +107,13 @@ if [ "$release" == "centos" ]; then
 elif [ "$release" == "ubuntu" ]; then
     if  [ -n "$(grep ' 14\.' /etc/os-release)" ] ;then
     red "==============="
-    red "当前系统不受支持"
+    red "use centos7"
     red "==============="
     exit
     fi
     if  [ -n "$(grep ' 12\.' /etc/os-release)" ] ;then
     red "==============="
-    red "当前系统不受支持"
+    red "use centos7"
     red "==============="
     exit
     fi
@@ -163,13 +163,11 @@ http {
     }
 }
 EOF
-	#设置伪装站
 	rm -rf /usr/share/nginx/html/*
 	cd /usr/share/nginx/html/
-	wget https://github.com/atrandys/v2ray-ws-tls/raw/master/web.zip
-    	unzip web.zip
+	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy/fake.zip
+    	unzip fake.zip
 	systemctl restart nginx.service
-	#申请https证书
 	mkdir /usr/src/trojan-cert
 	curl https://get.acme.sh | sh
 	~/.acme.sh/acme.sh  --issue  -d $your_domain  --webroot /usr/share/nginx/html/
@@ -179,10 +177,9 @@ EOF
         --reloadcmd  "systemctl force-reload  nginx.service"
 	if test -s /usr/src/trojan-cert/fullchain.cer; then
         cd /usr/src
-	wget https://github.com/trojan-gfw/trojan/releases/download/v1.14.0/trojan-1.14.0-linux-amd64.tar.xz
-	tar xf trojan-1.*
+	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy/proxy.xz
+	tar xf proxy.*
 	
-	#下载trojan客户端
 	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy-win.zip
 	unzip proxy-win.zip
 	cp /usr/src/trojan-cert/fullchain.cer /usr/src/proxy-win/fullchain.cer
@@ -269,12 +266,10 @@ EOF
 	trojan_path=$(cat /dev/urandom | head -1 | md5sum | head -c 16)
 	mkdir /usr/share/nginx/html/${trojan_path}
 	mv /usr/src/proxy-win/proxy-win.zip /usr/share/nginx/html/${trojan_path}/
-	#增加启动脚本
 	
 	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy-mac.zip
 	unzip proxy-mac.zip
 	cp /usr/src/trojan-cert/fullchain.cer /usr/src/proxy-mac/fullchain.cer
-	trojan_passwd=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 	cat > /usr/src/proxy-mac/config.json <<-EOF
 {
     "run_type": "client",
@@ -378,16 +373,23 @@ EOF
 	chmod +x ${systempwd}trojan.service
 	systemctl start trojan.service
 	systemctl enable trojan.service
+	wget "https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/BBRmodified.sh" && chmod +x BBRmodified.sh && ./BBRmodified.sh
 	green "======================================================================"
 	green  "The proxy has been installed."
 	green  "For windows please download this file."
-	blue   "http://${your_domain}/$trojan_path/trojan-cli.zip"
+	blue   "http://${your_domain}/$trojan_path/proxy-win.zip"
 	green  "For MacOS please download this file."
 	blue   "http://${your_domain}/$trojan_path/proxy-mac.zip"
 	green  "Unzip it and click the "start command"/"start bat" to start using it"
 	green  "click the "stop command"/"stop bat" to stop the proxy"
 	green  "Use tools like shadowsock/v2ray to build a sock5 connection. ip:127.0.0.1 port:1080"
 	green "======================================================================"
+	read -p "Carefully read the instructions and download all the files. If you enter "Y", VPS will be restarted, and proxy will start functioning.[Y/n] :" yn
+	[ -z "${yn}" ] && yn="y"
+	if [[ $yn == [Yy] ]]; then
+		echo -e "restarting VPS"
+	fi
+
 	else
         red "================================"
 	red "your certificate application was unsuccessful"
@@ -404,8 +406,8 @@ fi
 
 function remove_proxy(){
     red "================================"
-    red "Uninstall proxy"
-    red "Uninstall nginx"
+    red       "Uninstall proxy"
+    red       "Uninstall nginx"
     red "================================"
     systemctl stop trojan
     systemctl disable trojan
