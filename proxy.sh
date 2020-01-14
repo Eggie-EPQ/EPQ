@@ -387,6 +387,7 @@ EOF
 	[ -z "${yn}" ] && yn="y"
 	if [[ $yn == [Yy] ]]; then
 		echo -e "restarting VPS"
+		reboot
 	fi
 
 	else
