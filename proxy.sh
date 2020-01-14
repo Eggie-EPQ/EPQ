@@ -349,7 +349,6 @@ EOF
 EOF
 	cd /usr/src/proxy-mac/
 	zip -q -r proxy-mac.zip /usr/src/proxy-mac/
-	trojan_path=$(cat /dev/urandom | head -1 | md5sum | head -c 16)
 	mkdir /usr/share/nginx/html/${trojan_path}
 	mv /usr/src/proxy-mac/proxy-mac.zip /usr/share/nginx/html/${trojan_path}/
 	
