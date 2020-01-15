@@ -265,7 +265,7 @@ EOF
 	zip -q -r proxy-win.zip /usr/src/proxy-win/
 	trojan_path=$(cat /dev/urandom | head -1 | md5sum | head -c 16)
 	mkdir /usr/share/nginx/html/${trojan_path}
-	mv proxy-win.zip /usr/share/nginx/html/${trojan_path}/
+	mv /usr/src/proxy-win/proxy-win.zip /usr/share/nginx/html/${trojan_path}/
 	
 	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy-mac.zip
 	unzip proxy-mac.zip
@@ -350,7 +350,7 @@ EOF
 	cd /usr/src/proxy-mac/
 	zip -q -r proxy-mac.zip /usr/src/proxy-mac/
 	mkdir /usr/share/nginx/html/${trojan_path}
-	mv proxy-mac.zip /usr/share/nginx/html/${trojan_path}/
+	mv /usr/src/proxy-mac/proxy-mac.zip /usr/share/nginx/html/${trojan_path}/
 	
 cat > ${systempwd}trojan.service <<-EOF
 [Unit]  
