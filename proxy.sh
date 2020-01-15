@@ -130,11 +130,7 @@ green "======================="
 read your_domain
 real_addr=`ping ${your_domain} -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
 local_addr=`curl ipv4.icanhazip.com`
-if [ $real_addr == $local_addr ] ; then
-	green "=========================================="
-	green  "Your domain is functioning. Let's begin"
-	green "=========================================="
-	sleep 1s
+sleep 1s
 cat > /etc/nginx/nginx.conf <<-EOF
 user  root;
 worker_processes  1;
