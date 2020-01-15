@@ -132,7 +132,7 @@ real_addr=`ping ${your_domain} -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
 local_addr=`curl ipv4.icanhazip.com`
 if [ $real_addr == $local_addr ] ; then
 	green "=========================================="
-	green   "starting"
+	green  "Your domain is functioning. Let's begin"
 	green "=========================================="
 	sleep 1s
 cat > /etc/nginx/nginx.conf <<-EOF
@@ -346,7 +346,7 @@ EOF
         "password": ""
     }
 }
-EOF	
+EOF
 	cd /usr/src/proxy-mac/
 	zip -q -r proxy-mac.zip /usr/src/proxy-mac/
 	mkdir /usr/share/nginx/html/${trojan_path}
