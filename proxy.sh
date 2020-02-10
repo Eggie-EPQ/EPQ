@@ -151,10 +151,8 @@ http {
                       '"\$http_user_agent" "\$http_x_forwarded_for"';
     access_log  /var/log/nginx/access.log  main;
     sendfile        on;
-    #tcp_nopush     on;
     keepalive_timeout  120;
     client_max_body_size 20m;
-    #gzip  on;
     server {
         listen       80;
         server_name  $your_domain;
@@ -188,10 +186,14 @@ EOF
 	wget -P /usr/src/proxy-temp1 https://github.com/trojan-gfw/trojan/releases/download/v${latest_version}/trojan-${latest_version}-win.zip
 	wget -P /usr/src/proxy-temp2 https://github.com/trojan-gfw/trojan/releases/download/v${latest_version}/trojan-${latest_version}-macos.zip
 	unzip /usr/src/proxy-temp1/trojan-${latest_version}-win.zip -d /usr/src/proxy-temp1/
+	mv /usr/src/proxy-temp1/trojan/trojan.exe /usr/src/proxy-temp1/trojan/proxy.exe
 	unzip /usr/src/proxy-temp2/trojan-${latest_version}-win.zip -d /usr/src/proxy-temp2/
-	cp /usr/src/trojan-cert/fullchain.cer /usr/src/proxy-win/fullchain.cer
-	mv -f /usr/src/trojan-temp1/trojan/trojan.exe /usr/src/trojan-cli/
-	trojan_passwd=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
+	mv /usr/src/proxy-temp2/trojan/trojan /usr/src/proxy-temp2/trojan/proxy
+	cp /usr/src/proxy-cert/fullchain.cer /usr/src/proxy-win/fullchain.cer
+	cp /usr/src/proxy-cert/fullchain.cer /usr/src/proxy-mac/fullchain.cer
+	mv -f /usr/src/proxy-temp1/trojan/proxy.exe /usr/src/proxy-win/
+	mv -f /usr/src/proxy-temp2/trojan/proxy /usr/src/proxy-mac/
+	proxy_passwd=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 	cat > /usr/src/proxy-win/config.json <<-EOF
 {
     "run_type": "client",
@@ -200,7 +202,7 @@ EOF
     "remote_addr": "$your_domain",
     "remote_port": 443,
     "password": [
-        "$trojan_passwd"
+        "$proxy_passwd"
     ],
     "log_level": 1,
     "ssl": {
@@ -225,6 +227,7 @@ EOF
     }
 }
 EOF
+	mv -f /usr/src/proxy-win/config.json /usr/src/proxy-mac/
 	rm -rf /usr/src/trojan/server.conf
 	cat > /usr/src/trojan/server.conf <<-EOF
 {
@@ -234,12 +237,12 @@ EOF
     "remote_addr": "127.0.0.1",
     "remote_port": 80,
     "password": [
-        "$trojan_passwd"
+        "$proxy_passwd"
     ],
     "log_level": 1,
     "ssl": {
-        "cert": "/usr/src/trojan-cert/fullchain.cer",
-        "key": "/usr/src/trojan-cert/private.key",
+        "cert": "/usr/src/proxy-cert/fullchain.cer",
+        "key": "/usr/src/proxy-cert/private.key",
         "key_password": "",
         "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
 	"prefer_server_cipher": true,
@@ -271,96 +274,16 @@ EOF
 EOF
 	cd /usr/src/proxy-win/
 	zip -q -r proxy-win.zip /usr/src/proxy-win/
-	trojan_path=$(cat /dev/urandom | head -1 | md5sum | head -c 16)
-	mkdir /usr/share/nginx/html/${trojan_path}
-	mv /usr/src/proxy-win/proxy-win.zip /usr/share/nginx/html/${trojan_path}/
-	
-	
-	cat > /usr/src/proxy-mac/config.json <<-EOF
-{
-    "run_type": "client",
-    "local_addr": "127.0.0.1",
-    "local_port": 1080,
-    "remote_addr": "$your_domain",
-    "remote_port": 443,
-    "password": [
-        "$trojan_passwd"
-    ],
-    "log_level": 1,
-    "ssl": {
-        "verify": true,
-        "verify_hostname": true,
-        "cert": "fullchain.cer",
-        "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
-	"sni": "",
-        "alpn": [
-            "h2",
-            "http/1.1"
-        ],
-        "reuse_session": true,
-        "session_ticket": false,
-        "curves": ""
-    },
-    "tcp": {
-        "no_delay": true,
-        "keep_alive": true,
-        "fast_open": false,
-        "fast_open_qlen": 20
-    }
-}
-EOF
-	rm -rf /usr/src/trojan/server.conf
-	cat > /usr/src/trojan/server.conf <<-EOF
-{
-    "run_type": "server",
-    "local_addr": "0.0.0.0",
-    "local_port": 443,
-    "remote_addr": "127.0.0.1",
-    "remote_port": 80,
-    "password": [
-        "$trojan_passwd"
-    ],
-    "log_level": 1,
-    "ssl": {
-        "cert": "/usr/src/trojan-cert/fullchain.cer",
-        "key": "/usr/src/trojan-cert/private.key",
-        "key_password": "",
-        "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
-	"prefer_server_cipher": true,
-        "alpn": [
-            "http/1.1"
-        ],
-        "reuse_session": true,
-        "session_ticket": false,
-        "session_timeout": 600,
-        "plain_http_response": "",
-        "curves": "",
-        "dhparam": ""
-    },
-    "tcp": {
-        "no_delay": true,
-        "keep_alive": true,
-        "fast_open": false,
-        "fast_open_qlen": 20
-    },
-    "mysql": {
-        "enabled": false,
-        "server_addr": "127.0.0.1",
-        "server_port": 3306,
-        "database": "trojan",
-        "username": "trojan",
-        "password": ""
-    }
-}
-EOF
+	secure_path=$(cat /dev/urandom | head -1 | md5sum | head -c 16)
+	mkdir /usr/share/nginx/html/${secure_path}
+	mv /usr/src/proxy-win/proxy-win.zip /usr/share/nginx/html/${secure_path}/
 	cd /usr/src/proxy-mac/
 	zip -q -r proxy-mac.zip /usr/src/proxy-mac/
-	mkdir /usr/share/nginx/html/${trojan_path}
-	mv /usr/src/proxy-mac/proxy-mac.zip /usr/share/nginx/html/${trojan_path}/
+	mv /usr/src/proxy-mac/proxy-mac.zip /usr/share/nginx/html/${secure_path}/
 	
-cat > ${systempwd}trojan.service <<-EOF
+cat > ${systempwd}proxy.service <<-EOF
 [Unit]  
-Description=trojan  
+Description=proxy
 After=network.target  
    
 [Service]  
@@ -375,20 +298,21 @@ PrivateTmp=true
 WantedBy=multi-user.target
 EOF
 
-	chmod +x ${systempwd}trojan.service
-	systemctl start trojan.service
-	systemctl enable trojan.service
+	chmod +x ${systempwd}proxy.service
+	systemctl start proxy.service
+	systemctl enable proxy.service
 	wget "https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/BBRmodified.sh" && chmod +x BBRmodified.sh && ./BBRmodified.sh
 	green "======================================================================"
 	green  "The proxy has been installed."
-	green  "For windows please download this file."
-	blue   "http://${your_domain}/$trojan_path/proxy-win.zip"
+	green  "For Windows system please download this file."
+	red    "http://${your_domain}/$secure_path/proxy-win.zip"
 	green  "For MacOS please download this file."
-	blue   "http://${your_domain}/$trojan_path/proxy-mac.zip"
+	red    "http://${your_domain}/$secure_path/proxy-mac.zip"
 	green  "Unzip it and click the start.command or start.bat to start using it"
-	green  "Use tools like shadowsock/v2ray to build a sock5 connection. ip:127.0.0.1 port:1080"
+	blue   "Use other tools like SwichyOmega or v2ray client to build a sock5 connection on your device. ip:127.0.0.1 port:1080"
+	red    "Carefully copy all the instructions and download all the files. If you enter "Y", VPS will reboot, and proxy will start functioning."
 	green "======================================================================"
-	read -p "Carefully read the instructions and download all the files. If you enter "Y", VPS will be restarted, and proxy will start functioning.[Y/n] :" yn
+	read -p [Y/n] :" yn
 	[ -z "${yn}" ] && yn="y"
 	if [[ $yn == [Yy] ]]; then
 		echo -e "restarting VPS"
