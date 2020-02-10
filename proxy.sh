@@ -300,13 +300,12 @@ EOF
     }
 }
 EOF
-	cd /usr/src/proxy-win/
+	cd /usr/src/
 	zip -q -r proxy-win.zip proxy-win
+	zip -q -r proxy-mac.zip proxy-mac
 	secure_path=$(cat /dev/urandom | head -1 | md5sum | head -c 16)
 	mkdir /usr/share/nginx/html/${secure_path}
 	mv /usr/src/proxy-win.zip /usr/share/nginx/html/${secure_path}/
-	cd /usr/src/proxy-mac/
-	zip -q -r proxy-mac.zip proxy-mac
 	mv /usr/src/proxy-mac.zip /usr/share/nginx/html/${secure_path}/
 	
 cat > ${systempwd}proxy.service <<-EOF
