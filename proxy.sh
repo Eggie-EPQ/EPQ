@@ -166,7 +166,7 @@ EOF
 	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy/fake.zip
     	unzip fake.zip
 	systemctl restart nginx.service
-	mkdir /usr/src/proxy-cert /usr/src/proxy-temp1 /usr/src/proxy-temp2
+	mkdir /usr/src/proxy-cert
 	curl https://get.acme.sh | sh
 	~/.acme.sh/acme.sh  --issue  -d $your_domain  --webroot /usr/share/nginx/html/
     	~/.acme.sh/acme.sh  --installcert  -d  $your_domain   \
@@ -179,20 +179,14 @@ EOF
 	tar xf proxy.tar.xz
 	
 	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy-win.zip
-	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy-mac.zip
 	unzip proxy-win.zip
+	rm -rf proxy-win.zip
+	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy-mac.zip
 	unzip proxy-mac.zip
-	#latest_version=`grep tag_name latest| awk -F '[:,"v]' '{print $6}'`
-	#wget -P /usr/src/proxy-temp1 https://github.com/trojan-gfw/trojan/releases/download/v${latest_version}/trojan-${latest_version}-win.zip
-	#wget -P /usr/src/proxy-temp2 https://github.com/trojan-gfw/trojan/releases/download/v${latest_version}/trojan-${latest_version}-macos.zip
-	#unzip /usr/src/proxy-temp1/trojan-${latest_version}-win.zip -d /usr/src/proxy-temp1/
-	#mv /usr/src/proxy-temp1/trojan/trojan.exe /usr/src/proxy-temp1/trojan/proxy.exe
-	#unzip /usr/src/proxy-temp2/trojan-${latest_version}-win.zip -d /usr/src/proxy-temp2/
-	#mv /usr/src/proxy-temp2/trojan/trojan /usr/src/proxy-temp2/trojan/proxy
+	rm -rf proxy-mac.zip
+	
 	cp /usr/src/proxy-cert/fullchain.cer /usr/src/proxy-win/fullchain.cer
 	cp /usr/src/proxy-cert/fullchain.cer /usr/src/proxy-mac/fullchain.cer
-	mv -f /usr/src/proxy-temp1/trojan/proxy.exe /usr/src/proxy-win/
-	mv -f /usr/src/proxy-temp2/trojan/proxy /usr/src/proxy-mac/
 	proxy_passwd=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 	cat > /usr/src/proxy-win/config.json <<-EOF
 {
@@ -227,7 +221,41 @@ EOF
     }
 }
 EOF
-	cp -f /usr/src/proxy-win/config.json /usr/src/proxy-mac/
+
+	cat > /usr/src/proxy-mac/config.json <<-EOF
+{
+    "run_type": "client",
+    "local_addr": "127.0.0.1",
+    "local_port": 1080,
+    "remote_addr": "$your_domain",
+    "remote_port": 443,
+    "password": [
+        "$proxy_passwd"
+    ],
+    "log_level": 1,
+    "ssl": {
+        "verify": true,
+        "verify_hostname": true,
+        "cert": "fullchain.cer",
+        "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
+	"sni": "",
+        "alpn": [
+            "h2",
+            "http/1.1"
+        ],
+        "reuse_session": true,
+        "session_ticket": false,
+        "curves": ""
+    },
+    "tcp": {
+        "no_delay": true,
+        "keep_alive": true,
+        "fast_open": false,
+        "fast_open_qlen": 20
+    }
+}
+EOF
+	
 	rm -rf /usr/src/trojan/server.conf
 	cat > /usr/src/trojan/server.conf <<-EOF
 {
@@ -273,13 +301,13 @@ EOF
 }
 EOF
 	cd /usr/src/proxy-win/
-	zip -q -r proxy-win.zip *
+	zip -q -r proxy-win.zip proxy-win
 	secure_path=$(cat /dev/urandom | head -1 | md5sum | head -c 16)
 	mkdir /usr/share/nginx/html/${secure_path}
-	mv /usr/src/proxy-win/proxy-win.zip /usr/share/nginx/html/${secure_path}/
+	mv /usr/src/proxy-win.zip /usr/share/nginx/html/${secure_path}/
 	cd /usr/src/proxy-mac/
-	zip -q -r proxy-mac.zip *
-	mv /usr/src/proxy-mac/proxy-mac.zip /usr/share/nginx/html/${secure_path}/
+	zip -q -r proxy-mac.zip proxy-mac
+	mv /usr/src/proxy-mac.zip /usr/share/nginx/html/${secure_path}/
 	
 cat > ${systempwd}proxy.service <<-EOF
 [Unit]  
