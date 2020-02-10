@@ -273,19 +273,19 @@ EOF
 }
 EOF
 	cd /usr/src/proxy-win/
-	zip -q -r proxy-win.zip /usr/src/proxy-win/
+	zip -q -r proxy-win.zip *
 	secure_path=$(cat /dev/urandom | head -1 | md5sum | head -c 16)
 	mkdir /usr/share/nginx/html/${secure_path}
 	mv /usr/src/proxy-win/proxy-win.zip /usr/share/nginx/html/${secure_path}/
 	cd /usr/src/proxy-mac/
-	zip -q -r proxy-mac.zip /usr/src/proxy-mac/
+	zip -q -r proxy-mac.zip *
 	mv /usr/src/proxy-mac/proxy-mac.zip /usr/share/nginx/html/${secure_path}/
 	
 cat > ${systempwd}proxy.service <<-EOF
 [Unit]  
 Description=proxy
-After=network.target  
-   
+After=network.target
+
 [Service]  
 Type=simple  
 PIDFile=/usr/src/trojan/trojan/trojan.pid
@@ -312,7 +312,7 @@ EOF
 	blue   "Use other tools like SwichyOmega or v2ray client to build a sock5 connection on your device. ip:127.0.0.1 port:1080"
 	red    "Carefully copy all the instructions and download all the files. If you enter "Y", VPS will reboot, and proxy will start functioning."
 	green "======================================================================"
-	read -p [Y/n] :" yn
+	read -p "Restart now? [Y/n] :" yn
 	[ -z "${yn}" ] && yn="y"
 	if [[ $yn == [Yy] ]]; then
 		echo -e "restarting VPS"
@@ -322,6 +322,7 @@ EOF
 	else
         red "================================"
 	red "your certificate application was unsuccessful"
+	red "Installation is unsuccessful. Please try another subdomain and start again."
 	red "================================"
 	fi
 	
@@ -356,16 +357,12 @@ start_menu(){
     clear
     echo
     green " 1. install"
-    red   " 2. uninstall"
     blue  " 0. exit"
     echo
     read -p "please enter the number:" num
     case "$num" in
     1)
     install_proxy
-    ;;
-    2)
-    remove_proxy 
     ;;
     0)
     exit 1
