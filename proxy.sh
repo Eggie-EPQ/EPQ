@@ -91,13 +91,13 @@ fi
 if [ "$release" == "centos" ]; then
     if  [ -n "$(grep ' 6\.' /etc/redhat-release)" ] ;then
     red "==============="
-    red "use centos7"
+    red "plz use centos7"
     red "==============="
     exit
     fi
     if  [ -n "$(grep ' 5\.' /etc/redhat-release)" ] ;then
     red "==============="
-    red "use centos7"
+    red "plz use centos7"
     red "==============="
     exit
     fi
@@ -107,13 +107,13 @@ if [ "$release" == "centos" ]; then
 elif [ "$release" == "ubuntu" ]; then
     if  [ -n "$(grep ' 14\.' /etc/os-release)" ] ;then
     red "==============="
-    red "use centos7"
+    red "plz use centos7"
     red "==============="
     exit
     fi
     if  [ -n "$(grep ' 12\.' /etc/os-release)" ] ;then
     red "==============="
-    red "use centos7"
+    red "plz use centos7"
     red "==============="
     exit
     fi
@@ -168,21 +168,29 @@ EOF
 	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy/fake.zip
     	unzip fake.zip
 	systemctl restart nginx.service
-	mkdir /usr/src/trojan-cert
+	mkdir /usr/src/proxy-cert /usr/src/proxy-temp1 /usr/src/proxy-temp2
 	curl https://get.acme.sh | sh
 	~/.acme.sh/acme.sh  --issue  -d $your_domain  --webroot /usr/share/nginx/html/
     	~/.acme.sh/acme.sh  --installcert  -d  $your_domain   \
-        --key-file   /usr/src/trojan-cert/private.key \
-        --fullchain-file /usr/src/trojan-cert/fullchain.cer \
+        --key-file   /usr/src/proxy-cert/private.key \
+        --fullchain-file /usr/src/proxy-cert/fullchain.cer \
         --reloadcmd  "systemctl force-reload  nginx.service"
-	if test -s /usr/src/trojan-cert/fullchain.cer; then
+	if test -s /usr/src/proxy-cert/fullchain.cer; then
         cd /usr/src
-	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy/proxy.xz
-	tar xf proxy.*
+	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy/proxy.tar.xz
+	tar xf proxy.tar.xz
 	
 	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy-win.zip
+	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy-mac.zip
 	unzip proxy-win.zip
+	unzip proxy-mac.zip
+	latest_version=`grep tag_name latest| awk -F '[:,"v]' '{print $6}'`
+	wget -P /usr/src/proxy-temp1 https://github.com/trojan-gfw/trojan/releases/download/v${latest_version}/trojan-${latest_version}-win.zip
+	wget -P /usr/src/proxy-temp2 https://github.com/trojan-gfw/trojan/releases/download/v${latest_version}/trojan-${latest_version}-macos.zip
+	unzip /usr/src/proxy-temp1/trojan-${latest_version}-win.zip -d /usr/src/proxy-temp1/
+	unzip /usr/src/proxy-temp2/trojan-${latest_version}-win.zip -d /usr/src/proxy-temp2/
 	cp /usr/src/trojan-cert/fullchain.cer /usr/src/proxy-win/fullchain.cer
+	mv -f /usr/src/trojan-temp1/trojan/trojan.exe /usr/src/trojan-cli/
 	trojan_passwd=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 	cat > /usr/src/proxy-win/config.json <<-EOF
 {
@@ -267,9 +275,7 @@ EOF
 	mkdir /usr/share/nginx/html/${trojan_path}
 	mv /usr/src/proxy-win/proxy-win.zip /usr/share/nginx/html/${trojan_path}/
 	
-	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy-mac.zip
-	unzip proxy-mac.zip
-	cp /usr/src/trojan-cert/fullchain.cer /usr/src/proxy-mac/fullchain.cer
+	
 	cat > /usr/src/proxy-mac/config.json <<-EOF
 {
     "run_type": "client",
@@ -379,8 +385,7 @@ EOF
 	blue   "http://${your_domain}/$trojan_path/proxy-win.zip"
 	green  "For MacOS please download this file."
 	blue   "http://${your_domain}/$trojan_path/proxy-mac.zip"
-	green  "Unzip it and click the "start command"/"start bat" to start using it"
-	green  "click the "stop command"/"stop bat" to stop the proxy"
+	green  "Unzip it and click the start.command or start.bat to start using it"
 	green  "Use tools like shadowsock/v2ray to build a sock5 connection. ip:127.0.0.1 port:1080"
 	green "======================================================================"
 	read -p "Carefully read the instructions and download all the files. If you enter "Y", VPS will be restarted, and proxy will start functioning.[Y/n] :" yn
