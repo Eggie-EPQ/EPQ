@@ -182,13 +182,13 @@ EOF
 	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy-mac.zip
 	unzip proxy-win.zip
 	unzip proxy-mac.zip
-	latest_version=`grep tag_name latest| awk -F '[:,"v]' '{print $6}'`
-	wget -P /usr/src/proxy-temp1 https://github.com/trojan-gfw/trojan/releases/download/v${latest_version}/trojan-${latest_version}-win.zip
-	wget -P /usr/src/proxy-temp2 https://github.com/trojan-gfw/trojan/releases/download/v${latest_version}/trojan-${latest_version}-macos.zip
-	unzip /usr/src/proxy-temp1/trojan-${latest_version}-win.zip -d /usr/src/proxy-temp1/
-	mv /usr/src/proxy-temp1/trojan/trojan.exe /usr/src/proxy-temp1/trojan/proxy.exe
-	unzip /usr/src/proxy-temp2/trojan-${latest_version}-win.zip -d /usr/src/proxy-temp2/
-	mv /usr/src/proxy-temp2/trojan/trojan /usr/src/proxy-temp2/trojan/proxy
+	#latest_version=`grep tag_name latest| awk -F '[:,"v]' '{print $6}'`
+	#wget -P /usr/src/proxy-temp1 https://github.com/trojan-gfw/trojan/releases/download/v${latest_version}/trojan-${latest_version}-win.zip
+	#wget -P /usr/src/proxy-temp2 https://github.com/trojan-gfw/trojan/releases/download/v${latest_version}/trojan-${latest_version}-macos.zip
+	#unzip /usr/src/proxy-temp1/trojan-${latest_version}-win.zip -d /usr/src/proxy-temp1/
+	#mv /usr/src/proxy-temp1/trojan/trojan.exe /usr/src/proxy-temp1/trojan/proxy.exe
+	#unzip /usr/src/proxy-temp2/trojan-${latest_version}-win.zip -d /usr/src/proxy-temp2/
+	#mv /usr/src/proxy-temp2/trojan/trojan /usr/src/proxy-temp2/trojan/proxy
 	cp /usr/src/proxy-cert/fullchain.cer /usr/src/proxy-win/fullchain.cer
 	cp /usr/src/proxy-cert/fullchain.cer /usr/src/proxy-mac/fullchain.cer
 	mv -f /usr/src/proxy-temp1/trojan/proxy.exe /usr/src/proxy-win/
@@ -227,7 +227,7 @@ EOF
     }
 }
 EOF
-	mv -f /usr/src/proxy-win/config.json /usr/src/proxy-mac/
+	cp -f /usr/src/proxy-win/config.json /usr/src/proxy-mac/
 	rm -rf /usr/src/trojan/server.conf
 	cat > /usr/src/trojan/server.conf <<-EOF
 {
