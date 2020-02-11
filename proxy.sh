@@ -174,7 +174,7 @@ EOF
         --fullchain-file /usr/src/proxy-cert/fullchain.cer \
         --reloadcmd  "systemctl force-reload  nginx.service"
 	if test -s /usr/src/proxy-cert/fullchain.cer; then
-        cd /usr/src
+        cd /usr/src/
 	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy/proxy.tar.xz
 	tar xf proxy.tar.xz
 	
@@ -308,9 +308,9 @@ EOF
 	mv /usr/src/proxy-win.zip /usr/share/nginx/html/${secure_path}/
 	mv /usr/src/proxy-mac.zip /usr/share/nginx/html/${secure_path}/
 	
-cat > ${systempwd}proxy.service <<-EOF
+cat > ${systempwd}trojan.service <<-EOF
 [Unit]  
-Description=proxy
+Description=trojan
 After=network.target
 
 [Service]  
@@ -325,9 +325,9 @@ PrivateTmp=true
 WantedBy=multi-user.target
 EOF
 
-	chmod +x ${systempwd}proxy.service
-	systemctl start proxy.service
-	systemctl enable proxy.service
+	chmod +x ${systempwd}trojan.service
+	systemctl start trojan.service
+	systemctl enable trojan.service
 	wget "https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/BBRmodified.sh" && chmod +x BBRmodified.sh && ./BBRmodified.sh
 	green "======================================================================"
 	green  "The proxy has been installed."
