@@ -300,19 +300,20 @@ EOF
     }
 }
 EOF
-	cd /usr/src/
-	zip -q -r proxy-win.zip proxy-win
-	zip -q -r proxy-mac.zip proxy-mac
+	cd /usr/src/proxy-win/
+	zip -q -r proxy-win.zip /usr/src/proxy-win
+	cd /usr/src/proxy-mac/
+	zip -q -r proxy-mac.zip /usr/src/proxy-mac
 	secure_path=$(cat /dev/urandom | head -1 | md5sum | head -c 16)
 	mkdir /usr/share/nginx/html/${secure_path}
-	mv /usr/src/proxy-win.zip /usr/share/nginx/html/${secure_path}/
-	mv /usr/src/proxy-mac.zip /usr/share/nginx/html/${secure_path}/
+	mv /usr/src/proxy-win/proxy-win.zip /usr/share/nginx/html/${secure_path}/
+	mv /usr/src/proxy-mac/proxy-mac.zip /usr/share/nginx/html/${secure_path}/
 	
 cat > ${systempwd}trojan.service <<-EOF
 [Unit]  
-Description=trojan
-After=network.target
-
+Description=trojan  
+After=network.target  
+   
 [Service]  
 Type=simple  
 PIDFile=/usr/src/trojan/trojan/trojan.pid
@@ -360,6 +361,7 @@ else
 	red "================================"
 fi
 }
+
 
 function remove_proxy(){
     red "================================"
