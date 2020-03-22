@@ -42,6 +42,8 @@ fi
 
 
 function install_proxy(){
+systemctl stop nginx
+$systemPackage -y install net-tools socat
 Port80=`netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 80`
 Port443=`netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 443`
 if [ -n "$Port80" ]; then
@@ -123,7 +125,8 @@ elif [ "$release" == "ubuntu" ]; then
 fi
 
 $systemPackage -y install  nginx wget unzip zip curl tar >/dev/null 2>&1
-systemctl enable nginx.service
+systemctl enable nginx
+systemctl stop nginx
 green "======================="
 blue "please enter your domain"
 green "======================="
@@ -165,16 +168,22 @@ EOF
 	cd /usr/share/nginx/html/
 	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy/fake.zip
     	unzip fake.zip
-	systemctl restart nginx.service
-	mkdir /usr/src/proxy-cert
+	systemctl stop nginx
+	sleep 5
+	
+	if [ ! -d "/usr/src" ]; then
+	    mkdir /usr/src
+	fi
+	
+	mkdir /usr/src/proxy-cert /usr/src/proxy-temp /usr/src/proxy-client
 	curl https://get.acme.sh | sh
-	~/.acme.sh/acme.sh  --issue  -d $your_domain  --webroot /usr/share/nginx/html/
+	~/.acme.sh/acme.sh  --issue  -d $your_domain  --standalone
     	~/.acme.sh/acme.sh  --installcert  -d  $your_domain   \
         --key-file   /usr/src/proxy-cert/private.key \
-        --fullchain-file /usr/src/proxy-cert/fullchain.cer \
-        --reloadcmd  "systemctl force-reload  nginx.service"
+        --fullchain-file /usr/src/proxy-cert/fullchain.cer
 	if test -s /usr/src/proxy-cert/fullchain.cer; then
-        cd /usr/src/
+	systemctl start nginx
+        cd /usr/src/proxy-client
 	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy/proxy.tar.xz
 	tar xf proxy.tar.xz
 	
@@ -185,10 +194,10 @@ EOF
 	unzip proxy-mac.zip
 	rm -rf proxy-mac.zip
 	
-	cp /usr/src/proxy-cert/fullchain.cer /usr/src/proxy-win/fullchain.cer
-	cp /usr/src/proxy-cert/fullchain.cer /usr/src/proxy-mac/fullchain.cer
+	cp /usr/src/proxy-cert/fullchain.cer /usr/src/proxy-client/proxy-win/fullchain.cer
+	cp /usr/src/proxy-cert/fullchain.cer /usr/src/proxy-client/proxy-mac/fullchain.cer
 	proxy_passwd=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
-	cat > /usr/src/proxy-win/config.json <<-EOF
+	cat > /usr/src/proxy-client/proxy-win/config.json <<-EOF
 {
     "run_type": "client",
     "local_addr": "127.0.0.1",
@@ -202,9 +211,10 @@ EOF
     "ssl": {
         "verify": true,
         "verify_hostname": true,
-        "cert": "fullchain.cer",
-        "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
-	"sni": "",
+        "cert": "",
+        "cipher": "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA:AES128-SHA:AES256-SHA:DES-CBC3-SHA",
+        "cipher_tls13": "TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
+        "sni": "",
         "alpn": [
             "h2",
             "http/1.1"
@@ -216,13 +226,14 @@ EOF
     "tcp": {
         "no_delay": true,
         "keep_alive": true,
+        "reuse_port": false,
         "fast_open": false,
         "fast_open_qlen": 20
     }
 }
 EOF
-
-	cat > /usr/src/proxy-mac/config.json <<-EOF
+	
+	cat > /usr/src/proxy-client/proxy-mac/config.json <<-EOF
 {
     "run_type": "client",
     "local_addr": "127.0.0.1",
@@ -236,9 +247,10 @@ EOF
     "ssl": {
         "verify": true,
         "verify_hostname": true,
-        "cert": "fullchain.cer",
-        "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
-	"sni": "",
+        "cert": "",
+        "cipher": "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA:AES128-SHA:AES256-SHA:DES-CBC3-SHA",
+        "cipher_tls13": "TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
+        "sni": "",
         "alpn": [
             "h2",
             "http/1.1"
@@ -250,6 +262,7 @@ EOF
     "tcp": {
         "no_delay": true,
         "keep_alive": true,
+        "reuse_port": false,
         "fast_open": false,
         "fast_open_qlen": 20
     }
@@ -300,14 +313,11 @@ EOF
     }
 }
 EOF
-	cd /usr/src/proxy-win/
-	zip -q -r proxy-win.zip /usr/src/proxy-win
-	cd /usr/src/proxy-mac/
-	zip -q -r proxy-mac.zip /usr/src/proxy-mac
+	cd /usr/src/proxy-client
+	zip -q -r proxy-client.zip *
 	secure_path=$(cat /dev/urandom | head -1 | md5sum | head -c 16)
 	mkdir /usr/share/nginx/html/${secure_path}
-	mv /usr/src/proxy-win/proxy-win.zip /usr/share/nginx/html/${secure_path}/
-	mv /usr/src/proxy-mac/proxy-mac.zip /usr/share/nginx/html/${secure_path}/
+	mv /usr/src/proxy-client/proxy-client.zip /usr/share/nginx/html/${secure_path}/
 	
 cat > ${systempwd}trojan.service <<-EOF
 [Unit]  
@@ -332,10 +342,8 @@ EOF
 	wget "https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/BBRmodified.sh" && chmod +x BBRmodified.sh && ./BBRmodified.sh
 	green "======================================================================"
 	green  "The proxy has been installed."
-	green  "For Windows system please download this file."
-	red    "http://${your_domain}/$secure_path/proxy-win.zip"
-	green  "For MacOS please download this file."
-	red    "http://${your_domain}/$secure_path/proxy-mac.zip"
+	green  "please download this file."
+	red    "http://${your_domain}/$secure_path/proxy-client.zip"
 	green  "Unzip it and click the start.command or start.bat to start using it"
 	blue   "Use other tools like SwichyOmega or v2ray client to build a sock5 connection on your device. ip:127.0.0.1 port:1080"
 	red    "Carefully copy all the instructions and download all the files. If you enter "Y", VPS will reboot, and proxy will start functioning."
