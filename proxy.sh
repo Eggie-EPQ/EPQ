@@ -339,7 +339,7 @@ EOF
 	chmod +x ${systempwd}trojan.service
 	systemctl start trojan.service
 	systemctl enable trojan.service
-	wget "https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/BBRmodified.sh" && chmod +x BBRmodified.sh && ./BBRmodified.sh
+	#wget "https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/BBRmodified.sh" && chmod +x BBRmodified.sh && ./BBRmodified.sh
 	green "======================================================================"
 	green  "The proxy has been installed."
 	green  "please download this file."
