@@ -183,10 +183,10 @@ EOF
         --fullchain-file /usr/src/proxy-cert/fullchain.cer
 	if test -s /usr/src/proxy-cert/fullchain.cer; then
 	systemctl start nginx
-        cd /usr/src/proxy-client
+        cd /usr/src
 	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy/proxy.tar.xz
 	tar xf proxy.tar.xz
-	
+	cd /usr/src/proxy-client
 	wget https://raw.githubusercontent.com/Eggie-EPQ/EPQ/master/proxy-win.zip
 	unzip proxy-win.zip
 	rm -rf proxy-win.zip
